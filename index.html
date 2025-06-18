@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Profile Finder</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: #f6f8fa;
+            color: #1f2328;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .loader {
+            border: 4px solid #e1e4e8;
+            border-top: 4px solid #0366d6;
+            height: 32px;
+            width: 32px;
+            border-radius: 50%;
+            display: none;
+            animation: spin 0.8s linear infinite;
+            margin: 24px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .header {
+            text-align: center;
+            color: #1f2328;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #656d76;
+            font-size: 1rem;
+        }
+
+        .header i {
+            color: #0366d6;
+            margin-right: 8px;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 8px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            font-size: 15px;
+            color: #1f2328;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .input:focus {
+            border-color: #0366d6;
+            box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.1);
+        }
+
+        button {
+            background-color: #0366d6;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            font-size: 15px;
+            font-weight: 500;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: #005cc5;
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background-color: #d0d7de;
+            color: #656d76;
+            cursor: not-allowed;
+        }
+
+        .message {
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            color: #0366d6;
+            min-height: 24px;
+        }
+
+        .profile-container {
+            display: none;
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 24px;
+            border: 1px solid #e1e4e8;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .avatar {
+            width: 96px;
+            height: 96px;
+            border-radius: 12px;
+            border: 2px solid #e1e4e8;
+            object-fit: cover;
+        }
+
+        .profile-info {
+            flex: 1;
+        }
+
+        .profile-info h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f2328;
+            margin-bottom: 4px;
+        }
+
+        .profile-info .username {
+            color: #656d76;
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+
+        .profile-info .bio {
+            color: #1f2328;
+            font-size: 14px;
+            margin-bottom: 16px;
+            max-width: 500px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 12px;
+            background-color: #f6f8fa;
+            border-radius: 6px;
+            transition: background-color 0.2s ease;
+        }
+
+        .stat-item:hover {
+            background-color: #f0f2f5;
+        }
+
+        .stat-item h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #0366d6;
+            margin-bottom: 2px;
+        }
+
+        .stat-item p {
+            color: #656d76;
+            font-size: 13px;
+        }
+
+        .profile-links {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .profile-links a {
+            color: #0969da;
+            text-decoration: none;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s ease;
+        }
+
+        .profile-links a:hover {
+            color: #005cc5;
+            text-decoration: underline;
+        }
+
+        .repositories {
+            margin-top: 24px;
+        }
+
+        .repositories h3 {
+            font-size: 1.25rem;
+            color: #1f2328;
+            border-bottom: 1px solid #e1e4e8;
+            padding-bottom: 8px;
+            margin-bottom: 16px;
+        }
+
+        .repo-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+        }
+
+        .repo-card {
+            background-color: #fff;
+            border: 1px solid #e1e4e8;
+            border-radius: 8px;
+            padding: 16px;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .repo-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-color: #d0d7de;
+        }
+
+        .repo-card h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .repo-card a {
+            color: #0969da;
+            text-decoration: none;
+        }
+
+        .repo-card a:hover {
+            color: #005cc5;
+            text-decoration: underline;
+        }
+
+        .repo-card p {
+            color: #656d76;
+            font-size: 14px;
+            margin-bottom: 12px;
+            line-height: 1.5;
+            height: 2.8em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .repo-stats {
+           及时: flex;
+            gap: 16px;
+            font-size: 13px;
+            color: #656d76;
+            flex-wrap: wrap;
+        }
+
+        .repo-stats span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .view-more {
+            display: block;
+            margin: 24px auto 0;
+            padding: 12px 24px;
+            background-color: #24292f;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+
+        .view-more:hover {
+            background-color: #1a1f24;
+            transform: translateY(-1px);
+        }
+
+        .error-message {
+            color: #cf222e;
+            text-align: center;
+            font-size: 14px;
+            margin: 16px 0;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .profile-header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .avatar {
+                margin-bottom: 16px;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .repo-list {
+                grid-template-columns: 1fr;
+            }
+
+            .search-container {
+                flex-direction: column;
+            }
+
+            .input {
+                border-radius: 6px;
+            }
+
+            button {
+                border-radius: 6px;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fab fa-github"></i>GitHub Profile Finder</h1>
+            <p>Discover GitHub users and their repositories</p>
+        </div>
+
+        <form class="username">
+            <div class="search-container">
+                <input type="search" name="gitusername" class="input" placeholder="Enter GitHub username" autocomplete="off" required>
+                <button type="submit" class="btn"><i class="fas fa-search"></i> Search</button>
+            </div>
+        </form>
+
+        <div class="loader"></div>
+        <div class="message">
+            <p></p>
+        </div>
+
+        <div id="profile-container" class="profile-container">
+            <div class="profile-header">
+                <img src="" alt="Profile avatar" class="avatar">
+                <div class="profile-info">
+                    <h2 id="name"></h2>
+                    <div class="username" id="login"></div>
+                    <div class="bio" id="bio"></div>
+                    <div class="profile-links">
+                        <a href="" id="profile-link" target="_blank"><i class="fas fa-external-link-alt"></i> GitHub Profile</a>
+                        <a href="" id="blog-link" target="_blank"><i class="fas fa-globe"></i> Website</a>
+                        <a href="" id="location-link"><i class="fas fa-map-marker-alt"></i> <span id="location"></span></a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <h3 id="repos"></h3>
+                    <p>Repositories</p>
+                </div>
+                <div class="stat-item">
+                    <h3 id="followers"></h3>
+                    <p>Followers</p>
+                </div>
+                <div class="stat-item">
+                    <h3 id="following"></h3>
+                    <p>Following</p>
+                </div>
+                <div class="stat-item">
+                    <h3 id="gists"></h3>
+                    <p>Gists</p>
+                </div>
+            </div>
+
+            <div class="repositories">
+                <h3>Recent Repositories</h3>
+                <div class="repo-list" id="repo-list">
+                    <!-- Repository cards will be added here -->
+                </div>
+                <button class="view-more" id="view-more">View More on GitHub</button>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    "use strict";
+    document.querySelector(".username").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const username = document.querySelector('input[name="gitusername"]').value.trim();
+        if (!username) return;
+
+        const messageElement = document.querySelector(".message p");
+        const loaderElement = document.querySelector(".loader");
+        const buttonElement = document.querySelector(".username button");
+        const profileContainer = document.getElementById("profile-container");
+        
+        // Reset and show loading state
+        messageElement.innerHTML = "Finding User...";
+        loaderElement.style.display = "block";
+        buttonElement.disabled = true;
+        profileContainer.style.display = "none";
+
+        // Fetch user data
+        fetch(`https://api.github.com/users/${username}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(user => {
+                // Display user profile
+                displayUserProfile(user);
+                
+                // Fetch repositories
+                return fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=6`);
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(repos => {
+                // Display repositories
+                displayRepositories(repos, username);
+                
+                // Show success message
+                messageElement.innerHTML = "Profile loaded successfully";
+                profileContainer.style.display = "block";
+            })
+            .catch(error => {
+                if (error.message.includes("404")) {
+                    messageElement.innerHTML = "User not found!";
+                } else {
+                    messageElement.innerHTML = "An error occurred! " + error.message;
+                    console.error("Error:", error);
+                }
+            })
+            .finally(() => {
+                loaderElement.style.display = "none";
+                buttonElement.disabled = false;
+            });
+    });
+
+    function displayUserProfile(user) {
+        // Fill in profile data
+        document.getElementById("name").textContent = user.name || user.login;
+        document.getElementById("login").textContent = '@' + user.login;
+        document.getElementById("bio").textContent = user.bio || 'No bio available';
+        
+        // Set avatar
+        document.querySelector(".avatar").src = user.avatar_url;
+        
+        // Set stats
+        document.getElementById("repos").textContent = user.public_repos;
+        document.getElementById("followers").textContent = user.followers;
+        document.getElementById("following").textContent = user.following;
+        document.getElementById("gists").textContent = user.public_gists || 0;
+        
+        // Set links
+        document.getElementById("profile-link").href = user.html_url;
+        
+        const blogLink = document.getElementById("blog-link");
+        if (user.blog) {
+            blogLink.href = user.blog.startsWith('http') ? user.blog : 'https://' + user.blog;
+            blogLink.style.display = "inline-block";
+        } else {
+            blogLink.style.display = "none";
+        }
+        
+        const locationLink = document.getElementById("location-link");
+        if (user.location) {
+            document.getElementById("location").textContent = user.location;
+            locationLink.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(user.location)}`;
+            locationLink.style.display = "inline-block";
+        } else {
+            locationLink.style.display = "none";
+        }
+        
+        // Set view more button link
+        document.getElementById("view-more").href = `${user.html_url}?tab=repositories`;
+    }
+
+    function displayRepositories(repos, username) {
+        const repoList = document.getElementById("repo-list");
+        repoList.innerHTML = "";
+        
+        if (repos.length === 0) {
+            repoList.innerHTML = "<p class='error-message'>No repositories found</p>";
+            return;
+        }
+        
+        repos.forEach(repo => {
+            const repoCard = document.createElement("div");
+            repoCard.className = "repo-card";
+            
+            // Format date
+            const updatedDate = new Date(repo.updated_at);
+            const formattedDate = updatedDate.toLocaleDateString();
+            
+            repoCard.innerHTML = `
+                <h4>
+                    <a href="${repo.html_url}" target="_blank">${repo.name}</a>
+                    ${repo.fork ? '<span title="Forked repository"><i class="fas fa-code-branch"></i></span>' : ''}
+                </h4>
+                <p>${repo.description || 'No description available'}</p>
+                <div class="repo-stats">
+                    ${repo.language ? `<span><i class="fas fa-circle" style="color: ${getLanguageColor(repo.language)}"></i> ${repo.language}</span>` : ''}
+                    <span><i class="fas fa-star"></i> ${repo.stargazers_count}</span>
+                    <span><i class="fas fa-code-branch"></i> ${repo.forks_count}</span>
+                    <span><i class="fas fa-history"></i> ${formattedDate}</span>
+                </div>
+            `;
+            
+            repoList.appendChild(repoCard);
+        });
+        
+        // Update view more button
+        const viewMoreBtn = document.getElementById("view-more");
+        viewMoreBtn.onclick = () => window.open(`https://github.com/${username}?tab=repositories`, '_blank');
+    }
+
+    function getLanguageColor(language) {
+        // Common language colors
+        const colors = {
+            "JavaScript": "#f1e05a",
+            "TypeScript": "#2b7489",
+            "Python": "#3572A5",
+            "Java": "#b07219",
+            "HTML": "#e34c26",
+            "CSS": "#563d7c",
+            "C#": "#178600",
+            "C++": "#f34b7d",
+            "PHP": "#4F5D95",
+            "Ruby": "#701516",
+            "Go": "#00ADD8",
+            "Swift": "#ffac45",
+            "Kotlin": "#F18E33",
+            "Rust": "#dea584"
+        };
+        
+        return colors[language] || "#6e5494"; 
+    }
+
+    window.onload = () => {
+        document.querySelector('input[name="gitusername"]').value = "";
+    };
+</script>
+
+</html>
